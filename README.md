@@ -1,0 +1,21 @@
+# PyOpenGL 双曲空间示例
+
+这个示例使用 **PyOpenGL + pygame** 渲染一个 3D 双曲空间（Poincaré ball 模型）：
+
+- 场景里有少量小块多面体（四面体、立方体、八面体）。
+- 视角支持前后移动、左右转向。
+- 视角移动时，摄像机本身在 OpenGL 中保持不动，而是对所有物体中心做 Möbius 变换。
+- 渲染时所有物体都映射在单位球体内。
+
+## 运行
+
+```bash
+pip install pygame PyOpenGL
+python hyperbolic_scene.py
+```
+
+## 操作
+
+- `W/S` 或 `↑/↓`：前后移动（通过 Möbius 变换移动世界）
+- `A/D` 或 `←/→`：左右转向（旋转世界）
+- 关闭窗口退出
