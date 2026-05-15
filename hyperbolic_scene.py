@@ -51,11 +51,6 @@ def scale(s: float, v: Vec3) -> Vec3:
     return (s * v[0], s * v[1], s * v[2])
 
 
-def mat_rot_y(v: Vec3, ang: float) -> Vec3:
-    c, s = math.cos(ang), math.sin(ang)
-    return (c * v[0] + s * v[2], v[1], -s * v[0] + c * v[2])
-
-
 def forward_from_yaw(yaw: float) -> Vec3:
     return (math.sin(yaw), 0.0, -math.cos(yaw))
 
@@ -238,8 +233,6 @@ def main() -> None:
 
         if abs(turn_y) > 1e-8:
             yaw += turn_y
-            for poly in polys:
-                poly.center = mat_rot_y(poly.center, turn_y)
 
         if abs(move_z) > 1e-8:
             fwd = forward_from_yaw(yaw)
@@ -251,7 +244,7 @@ def main() -> None:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         # First-person observer pinned at the origin of the Poincare ball.
-        # Motion is represented by world Möbius transforms; camera coordinates stay fixed.
+        # Motion is represented by world Möbius transforms for translation; camera coordinates stay fixed.
         from OpenGL.GLU import gluLookAt
 
         look = forward_from_yaw(yaw)
