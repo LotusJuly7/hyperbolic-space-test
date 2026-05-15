@@ -1,7 +1,7 @@
 import math
 import random
 from dataclasses import dataclass
-from typing import List, Sequence, Tuple
+from typing import List, Tuple
 
 import pygame
 from pygame.locals import DOUBLEBUF, OPENGL
@@ -54,6 +54,10 @@ def scale(s: float, v: Vec3) -> Vec3:
 def mat_rot_y(v: Vec3, ang: float) -> Vec3:
     c, s = math.cos(ang), math.sin(ang)
     return (c * v[0] + s * v[2], v[1], -s * v[0] + c * v[2])
+
+
+def forward_from_yaw(yaw: float) -> Vec3:
+    return (math.sin(yaw), 0.0, -math.cos(yaw))
 
 
 def mobius_add(a: Vec3, b: Vec3) -> Vec3:
@@ -210,6 +214,7 @@ def main() -> None:
     running = True
     move_speed = 0.55
     turn_speed = 1.4
+    yaw = 0.0
 
     while running:
         dt = clock.tick(60) / 1000.0
@@ -232,23 +237,25 @@ def main() -> None:
             turn_y -= turn_speed * dt
 
         if abs(turn_y) > 1e-8:
+            yaw += turn_y
             for poly in polys:
                 poly.center = mat_rot_y(poly.center, turn_y)
 
         if abs(move_z) > 1e-8:
-            cam_step = (0.0, 0.0, move_z)
+            fwd = forward_from_yaw(yaw)
+            cam_step = (fwd[0] * (-move_z), 0.0, fwd[2] * (-move_z))
             inv_step = (-cam_step[0], -cam_step[1], -cam_step[2])
             for poly in polys:
                 poly.center = mobius_add(inv_step, poly.center)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
-        # Fixed observer at z=+3 looking at origin, camera itself never moves.
-        # World changes via Möbius transforms.
-        # pylint: disable=assignment-from-no-return
+        # First-person observer pinned at the origin of the Poincare ball.
+        # Motion is represented by world Möbius transforms; camera coordinates stay fixed.
         from OpenGL.GLU import gluLookAt
 
-        gluLookAt(0.0, 0.0, 3.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+        look = forward_from_yaw(yaw)
+        gluLookAt(0.0, 0.0, 0.0, look[0], look[1], look[2], 0.0, 1.0, 0.0)
 
         draw_wire_sphere(1.0)
         for poly in polys:
